@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Matt's Stat Database</title>
+    </head>
+    <body style="font-family: Lekton; font-size: 24pt">
+        <p style="width: 800px">Search for summoner here:</p>
+        <form id="player" onsubmit="DispatchName()" action="javascript:void(0);">
+            <input type="text" id="message" name="message" autocomplete="off" style="width:700px" />
+            <input type="submit" id="sub" name="sub" value="Send" style="width:90px" />
+        </form>
+        <select id="champion" onchange="DispatchChampion(this.value)">{% for champion, value in sorted(champions.items()) %}<option value="{{champion}}">{{value['name']}}</option>{% end %}</select>
+        <div id="result"></div>
+        <script type="text/javascript">
+            var playerSocket = new WebSocket("ws://52.18.96.188:8888/player");
+            var champSocket = new WebSocket("ws://52.18.96.188:8888/champion")
+            var currentPlayer = null
+            var currentChampion = null
+            playerSocket.onmessage = function(evt){
+                currentChampion = null;
+                var currentDiv = document.getElementById("result");
+                currentDiv.innerHTML = evt.data;
+            }
+
+            function DispatchName(){
+                currentPlayer = document.getElementById("message").value;
+                playerSocket.send(currentPlayer);
+            }
+
+            champSocket.onmessage = function(evt){
+                var currentDiv = document.getElementById("result");
+                currentDiv.innerHTML = evt.data;
+            }
+
+            function DispatchChampion(champion){
+                currentChampion = champion;
+                champSocket.send(currentPlayer.toString() + "::" + currentChampion.toString());
+            }
+
+        </script>
+    </body>
+</html>
