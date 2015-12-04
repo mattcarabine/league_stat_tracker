@@ -64,7 +64,7 @@ class PlayerHandler(tornado.websocket.WebSocketHandler):
         deaths = round(deaths / game_counter, 2)
         assists = round(assists / game_counter, 2)
         player = self.player_dict[player]['name']
-        self.write_message('Stats for {}<br>Kills: {}<br>Deaths: {}<br>Assists: {}<br>Games: {}'.format(player, kills, deaths, assists, len(games)))
+        self.write_message('Stats for {}<br>Kills: {}<br>Deaths: {}<br>Assists: {}<br>Games: {}'.format(player, kills, deaths, assists, game_counter))
 
 
 class ChampionHandler(tornado.websocket.WebSocketHandler):
