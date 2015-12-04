@@ -6,10 +6,14 @@ import tornado.httpserver
 from tornado.web import url
 from couchbase.bucket import Bucket
 
+WANTED_SUB_TYPES = ['NORMAL', 'RANKED_SOLO_5x5', 'RANKED_TEAM_5x5',
+                    'CAP_5x5']
+
 
 class MainHandler(tornado.web.RequestHandler):
     def check_origin(self, origin):
         return True
+
     def initialize(self):
         self.player_dict = bkt.get('Players').value
         self.champions = bkt.get('Champions').value
@@ -20,7 +24,8 @@ class MainHandler(tornado.web.RequestHandler):
 
 class PlayerHandler(tornado.websocket.WebSocketHandler):
     def check_origin(self, origin):
-        return True   
+        return True
+   
     def initialize(self):
         self.player_dict = bkt.get('Players').value
 
@@ -33,27 +38,28 @@ class PlayerHandler(tornado.websocket.WebSocketHandler):
             self.write_message('Summoner not found')
             return
         games = bkt.get('Matches::{}'.format(id)).value['games']
-        kills = 0
-        deaths = 0
-        assists = 0
+        kills = 0.0
+        deaths = 0.0
+        assists = 0.0
         for game in games:
-            try:
-                kills += game['stats']['championsKilled']
-            except KeyError:
-                pass
+	    if game['subType'] in WANTED_SUB_TYPES: 
+            	try:
+                    kills += game['stats']['championsKilled']
+                except KeyError:
+                    pass
 
-            try:
-                deaths += game['stats']['numDeaths']
-            except KeyError:
-                pass
+                try:
+                    deaths += game['stats']['numDeaths']
+                except KeyError:
+                    pass
 
-            try:
-                assists += game['stats']['assists']
-            except KeyError:
-                pass
-        kills = float(kills) / len(games)
-        deaths = float(deaths) / len(games)
-        assists = float(assists) / len(games)
+                try:
+                    assists += game['stats']['assists']
+                except KeyError:
+                   pass
+        kills = kills / len(games)
+        deaths = deaths / len(games)
+        assists = assists / len(games)
         player = self.player_dict[player]['name']
         self.write_message('Stats for {}<br>Kills: {}<br>Deaths: {}<br>Assists: {}<br>Games: {}'.format(player, kills, deaths, assists, len(games)))
 
@@ -61,6 +67,7 @@ class PlayerHandler(tornado.websocket.WebSocketHandler):
 class ChampionHandler(tornado.websocket.WebSocketHandler):
     def check_origin(self, origin):
         return True    
+
     def initialize(self):
         self.player_dict = bkt.get('Players').value
         self.champions = bkt.get('Champions').value
@@ -74,12 +81,14 @@ class ChampionHandler(tornado.websocket.WebSocketHandler):
             self.write_message('Summoner not found')
 
         games = bkt.get('Matches::{}'.format(id)).value['games']
-        kills = 0
-        deaths = 0
-        assists = 0
+        kills = 0.0
+        deaths = 0.0
+        assists = 0.0
         game_counter = 0.0
         for game in games:
-            if game['championId'] == self.champions['data'][champion]['id']:
+
+            if game['subType'] in WANTED_SUB_TYPES and 
+	            game['championId'] == self.champions['data'][champion]['id']:
                 game_counter += 1
                 try:
                     kills += game['stats']['championsKilled']
@@ -100,7 +109,7 @@ class ChampionHandler(tornado.websocket.WebSocketHandler):
         champion = self.champions['data'][champion]['name']
 
         if game_counter > 0:
-            kills = float(kills) / game_counter
+            kills = kills / game_counter
             deaths = float(deaths) / game_counter
             assists = float(assists) / game_counter
             self.write_message('Stats for {}<br>Kills: {}<br>Deaths: {}<br>Assists: {}<br>Games: {}'.format(player, kills, deaths, assists, int(game_counter)))
