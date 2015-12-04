@@ -42,8 +42,8 @@ class PlayerHandler(tornado.websocket.WebSocketHandler):
         deaths = 0.0
         assists = 0.0
         for game in games:
-	    if game['subType'] in WANTED_SUB_TYPES: 
-            	try:
+            if game['subType'] in WANTED_SUB_TYPES:
+                try:
                     kills += game['stats']['championsKilled']
                 except KeyError:
                     pass
@@ -86,9 +86,8 @@ class ChampionHandler(tornado.websocket.WebSocketHandler):
         assists = 0.0
         game_counter = 0.0
         for game in games:
-
-            if game['subType'] in WANTED_SUB_TYPES and 
-	            game['championId'] == self.champions['data'][champion]['id']:
+            if (game['subType'] in WANTED_SUB_TYPES and
+                    game['championId'] == self.champions['data'][champion]['id']):
                 game_counter += 1
                 try:
                     kills += game['stats']['championsKilled']
