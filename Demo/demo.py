@@ -41,8 +41,10 @@ class PlayerHandler(tornado.websocket.WebSocketHandler):
         kills = 0.0
         deaths = 0.0
         assists = 0.0
+        game_counter = 0.0
         for game in games:
             if game['subType'] in WANTED_SUB_TYPES:
+                game_counter += 1
                 try:
                     kills += game['stats']['championsKilled']
                 except KeyError:
@@ -57,9 +59,10 @@ class PlayerHandler(tornado.websocket.WebSocketHandler):
                     assists += game['stats']['assists']
                 except KeyError:
                    pass
-        kills = kills / len(games)
-        deaths = deaths / len(games)
-        assists = assists / len(games)
+
+        kills = round(kills / game_counter, 2)
+        deaths = round(deaths / game_counter, 2)
+        assists = round(assists / game_counter, 2)
         player = self.player_dict[player]['name']
         self.write_message('Stats for {}<br>Kills: {}<br>Deaths: {}<br>Assists: {}<br>Games: {}'.format(player, kills, deaths, assists, len(games)))
 
@@ -108,9 +111,9 @@ class ChampionHandler(tornado.websocket.WebSocketHandler):
         champion = self.champions['data'][champion]['name']
 
         if game_counter > 0:
-            kills = kills / game_counter
-            deaths = float(deaths) / game_counter
-            assists = float(assists) / game_counter
+            kills = round(kills / game_counter, 2)
+            deaths = round(deaths / game_counter, 2)
+            assists = round(assists / game_counter, 2)
             self.write_message('Stats for {}<br>Kills: {}<br>Deaths: {}<br>Assists: {}<br>Games: {}'.format(player, kills, deaths, assists, int(game_counter)))
         else:
             self.write_message('No games found for {} playing {}'.format(player, champion))
